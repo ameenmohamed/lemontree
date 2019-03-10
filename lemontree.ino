@@ -6,6 +6,7 @@ const int PUMP_PIN = 2;
 const int GOOD_MOISTURE = 70;
 const int LOW_SOIL_MOISTURE = 35;
 const int FAN_SPEED_MAX = 255;
+const String NO_VALUE = "NOVAL";
 
 String data = "";
 boolean isLive = false;
@@ -39,16 +40,16 @@ void loop() {
   // put your main code here, to run repeatedly:
     String incoming = ""; 
     moisture = analogRead(VAL_PROBE);
-    Serial.print("Sensor:LocalSoilMoisture");Serial.print(moisture);Serial.println("------------------");
+  //  Serial.print("Sensor:LocalSoilMoisture");Serial.print(moisture);Serial.println("------------------");
     int tempSensor = analogRead(TEMP_PIN);
     localTemp = readTemp(tempSensor);
-    Serial.print("Sensor:LocalTemprature");Serial.print(tempSensor);Serial.println("------------------");
+ //   Serial.print("Sensor:LocalTemprature");Serial.print(tempSensor);Serial.println("------------------");
 
     /// read all local sensor values before this line 
     delay(2000);
     if(Serial.available() > 0 ){
       data = Serial.readString();
-      readData(data);
+      readData();
       windSpeed = constrain(windSpeed,0,50);
       moisture = map(moisture,550,10,0,100);
 
@@ -72,8 +73,6 @@ void loop() {
     Serial.print("Fan Speed  ");Serial.print(fanSpeed);   Serial.println("  ");
  
     analogWrite(FAN_PIN,fanSpeed);
-
-
     startLights();
    
 }
@@ -106,96 +105,105 @@ boolean shouldStartPump(){
     
   }
 
-void readData(String incoming){
+void readData(){
 //sampledata="test<RT>remote temp12.12</RT><LT>localtemp10.10</LT><RL>remoteLux123</RL>,<WS>windSpeed</WS>,<RSM>remote soil moist</RSM>,<LSM>local soilMoist</LSM><RR> remote rain0</RR><LR>local riN</LR><RMST>1</RMST><LMST></LMST><TM>14</TM>";
 
-   if(incoming.startsWith("test")){
+   if(data.startsWith("test")){
     int startPos = 0;
     int endPos = 0;
      String val = "";
-    commonData( incoming);
-      String str = "<LT>";
-      startPos = (incoming.indexOf(str))+ str.length();
-      endPos = incoming.indexOf("</LT>");
-      val = incoming.substring(startPos,endPos);
-      Serial.print("Override:LocalTemprature:");Serial.print(val);Serial.println("------------------");
-      roomTemp = val.toDouble();
+      parseCommonData();
 
-      str = "LSM";
-      startPos = incoming.indexOf(str)+ str.length();
-      endPos = incoming.indexOf("</LSM>");
-      val = incoming.substring(startPos,endPos);   
-      Serial.print("Override:LocalSoilMoisture:");Serial.print(val);Serial.println("------------------");
-      moisture = val.toDouble();
-      
-    
-                
-      }
-      else if(incoming.startsWith("live")){
-        commonData( incoming);
+       val = parseValue("<LT>","</LT>"); 
+       if(!val.equalsIgnoreCase(NO_VALUE)){
+           roomTemp = val.toDouble();
+       }
+       Serial.print("Override:LocalTemprature:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(roomTemp);Serial.println("");
+ 
+
+      val = parseValue("<LSM>","</LSM>"); 
+       if(!val.equalsIgnoreCase(NO_VALUE)){
+        moisture = val.toDouble();
+       }
+       Serial.print("Override:LocalSoilMoisture:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(moisture);Serial.println("");
+    }
+     else if(data.startsWith("live")){
+        parseCommonData();
       }
 }
 
-void commonData(String incoming){
+void parseCommonData(){
 
-     int startPos = 0;
-    int endPos = 0;
-    String str = "<RT>";
     String val = "";
-       startPos = incoming.indexOf(str)+ str.length();
-       endPos = incoming.indexOf("</RT>");
-      val = incoming.substring(startPos,endPos);   
-      Serial.print("RemoteTemp:");Serial.print(val);Serial.println("------------------");
-      remTemp = val.toDouble();
+    Serial.println(data);
+
+       val = parseValue("<RT>","</RT>");      
+      if(!val.equalsIgnoreCase(NO_VALUE)){
+           remTemp = val.toDouble();
+      }
+      Serial.print("RemoteTemp:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(remTemp);Serial.println("");
+
+       val = parseValue("<RL>","</RL>");
+       if(!val.equalsIgnoreCase(NO_VALUE)){
+            remLux = val.toInt();
+       }
+       Serial.print("RemoteLightValue:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(remLux);Serial.println("");
       
-      str = "<RL>";
-      startPos = incoming.indexOf(str)+ str.length();
-      endPos = incoming.indexOf("</RL>");
-      val = incoming.substring(startPos,endPos);
-      Serial.print("RemoteLightValue:");Serial.print(val);Serial.println("------------------");
-      remLux = val.toInt();
+      val = parseValue("<WS>","</WS>");
+       if(!val.equalsIgnoreCase(NO_VALUE)){
+          windSpeed = val.toDouble();
+       }
+       Serial.print("Windspeed:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(windSpeed);Serial.println("");
+
+
+      val = parseValue("<RSM>","</RSM>");
+       if(!val.equalsIgnoreCase(NO_VALUE)){
+           remSoilMoist = val.toInt();
+       }
+       Serial.print("RemoteSoilMoisture:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(remSoilMoist);Serial.println("");
+
+
+      val = parseValue("<RR>","</RR>");
+       if(!val.equalsIgnoreCase(NO_VALUE)){
+            isRaining = val.toInt();
+       }
+       Serial.print("RemoteRainStatus:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(isRaining);Serial.println("");
+
       
-      str = "<WS>";
-      startPos = incoming.indexOf(str)+ str.length();
-      endPos = incoming.indexOf("</WS>");
-      val = incoming.substring(startPos,endPos);
-      Serial.print("Windspeed:");Serial.print(val);Serial.println("------------------");
-      windSpeed = val.toDouble();
+      val = parseValue("<TM>","</TM>");
+      if(!val.equalsIgnoreCase(NO_VALUE)){
+        sfTime = val.toInt();
+      }
+      Serial.print("Timein24Hrs:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(sfTime);Serial.println("");
 
-
-       str = "<RSM>";
-       startPos = incoming.indexOf(str)+ str.length();
-      endPos = incoming.indexOf("</RSM>");
-      val = incoming.substring(startPos,endPos);
-      Serial.print("RemoteSoilMoisture:");Serial.print(val);Serial.println("------------------");
-      remSoilMoist = val.toInt();
-
-      str = "<RR>";
-       startPos = incoming.indexOf(str)+ str.length();
-      endPos = incoming.indexOf("</RR>");
-      val = incoming.substring(startPos,endPos);
-      Serial.print("RemoteRainStatus:");Serial.print(val);Serial.println("------------------");
-      isRaining = val.toInt();
-
-      str = "<TM>";
-       startPos = incoming.indexOf(str)+ str.length();
-      endPos = incoming.indexOf("</TM>");
-      val = incoming.substring(startPos,endPos);
-      Serial.print("Timein24Hrs:");Serial.print(val);Serial.println("------------------");
-      sfTime = val.toInt();
-
-      str = "<SS>";
-      startPos = incoming.indexOf(str)+ str.length();
-      endPos = incoming.indexOf("</SS>");
-      val = incoming.substring(startPos,endPos);
-      Serial.print("SunSetTimein24Hrs:");Serial.print(val);Serial.println("------------------");
-      sunsetTime = val.toInt();
+       val = parseValue("<SS>","</SS>");  
+       if(!val.equalsIgnoreCase(NO_VALUE)){
+           sunsetTime = val.toInt();
+       }
+       Serial.print("SunSetTimein24Hrs:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(sunsetTime);Serial.println("");
       
   }
 
-void setFanSpeed(int fSpeed){
-    
+String parseValue(String startStr,String endStr){
+  
+   int startPos = 0;
+    int endPos = 0;
+    String retVal = "";
+    int baseChk = data.indexOf(startStr);
+    int endChk = data.indexOf(endStr);
+    if(baseChk > 0 && endChk > 0){
+        startPos = baseChk + startStr.length();
+        endPos = endChk;
+        retVal = data.substring(startPos,endPos);
+    }
+    else {
+        retVal = NO_VALUE;
+      }
+    return retVal;
+  
   }
+  
+
 float readTemp(int temp){
   float r1 = 1000;
   float logr2,r2,t;
@@ -213,13 +221,13 @@ float readTemp(int temp){
  void  startLights(){
       if(sfTime < 12){
          //blue lights on
-         Serial.print("Blue Lights on ...");Serial.println("------------------");
+         Serial.print("Blue Lights on ...");
         }
       else if(sfTime >12){
           // whitelights on
-          Serial.print("White Lights on ...");Serial.println("------------------");
+          Serial.print("White Lights on ...");
           }
       else if(sfTime > sunsetTime){
-          Serial.print("Red Lights on ...");Serial.println("------------------");
+          Serial.print("Red Lights on ...");
             }
     }
