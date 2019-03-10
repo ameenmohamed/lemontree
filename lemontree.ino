@@ -305,12 +305,15 @@ float readTemp(int temp){
     switch(sfTime) {
         case 6:
             setLEDs(127,0,0);  // sunrise starts
+            Serial.print("Time is :");Serial.print(6);Serial.println("-----Sunrise starts ");
             break;
         case 7:
             setLEDs(255, 0, 0);  //sunrise
+            Serial.print("Time is :");Serial.print(7);Serial.println("----- Good Morning ");
             break;
         case 8:
             setLEDs(127, 127, 0); // sunrise -> day
+             Serial.print("Time is :");Serial.print(8);Serial.println("----- Breakfast time ");
             break;
         case 9:
         case 10:
@@ -322,17 +325,22 @@ float readTemp(int temp){
         case 16:
         case 17:
             setLEDs(0,255,0); // daytime
+             Serial.print("Time is :");Serial.print(17);Serial.println("----- Its day time ");
             break;
         case 18:
             setLEDs(0,127,127); // sunset starts
+             Serial.print("Time is :");Serial.print(18);Serial.println("----- Sunset View ");
             break;
         case 19:
             setLEDs(0,0,255); // sunset
+            Serial.print("Time is :");Serial.print(19);Serial.println("----- Its getting dark after sunset ");
             break;
         case 20:
             setLEDs(0,0,127); // sunset ends
+            Serial.print("Time is :");Serial.print(20);Serial.println("----- Its  dark ");
             break;
         default:
+            Serial.print("Time is NIGHT: Good night ...");
             setLEDs(0,0,0); // night
     }
 }
@@ -343,5 +351,3 @@ void setLEDs(int east_red, int bluewhite, int west_red) {
     analogWrite(WEST_RED_LED, west_red);
     analogWrite(WHITE_LED, bluewhite);
 }
-
-
