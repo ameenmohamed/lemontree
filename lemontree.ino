@@ -1,14 +1,14 @@
 
 void  startLights(void);
 
-const int VAL_PROBE = 7; // Analog pin 08
-const int FAN_PIN  = 3;
+const int VAL_PROBE = 7; // SOIL 
+const int FAN_PIN  = 4;
 const int TEMP_PIN = A6;
-const int PUMP_PIN = 2;
+const int PUMP_PIN = 3;
 const int WEST_RED_LED = 5; // PWM
 const int EAST_RED_LED = 9; // PWM
 const int WHITE_LED = 6; // PWM
-const int HEAT_PIN = 11;
+const int HEAT_PIN = 2;
 
 
 
@@ -51,6 +51,7 @@ void setup() {
   Serial.begin(9600);
   pinMode(FAN_PIN,OUTPUT);
   pinMode(PUMP_PIN,OUTPUT);
+  pinMode(HEAT_PIN,OUTPUT);
   
   pinMode(VAL_PROBE,INPUT);
   pinMode(TEMP_PIN,INPUT);
