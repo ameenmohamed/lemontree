@@ -1,7 +1,15 @@
+
+void  startLights(void);
+
 const int VAL_PROBE = 7; // Analog pin 08
 const int FAN_PIN  = 3;
 const int TEMP_PIN = A6;
 const int PUMP_PIN = 2;
+const int WEST_RED_LED = 5; // PWM
+const int EAST_RED_LED = 9; // PWM
+const int WHITE_LED = 6; // PWM
+
+
 
 const int GOOD_MOISTURE = 70;
 const int LOW_SOIL_MOISTURE = 35;
@@ -218,16 +226,51 @@ float readTemp(int temp){
   
   }
 
+
  void  startLights(){
-      if(sfTime < 12){
-         //blue lights on
-         Serial.print("Blue Lights on ...");
-        }
-      else if(sfTime >12){
-          // whitelights on
-          Serial.print("White Lights on ...");
-          }
-      else if(sfTime > sunsetTime){
-          Serial.print("Red Lights on ...");
-            }
+    // sunrise is at 07:28
+    // sunset is at 19:12
+
+    switch(sfTime) {
+        case 6:
+            setLEDs(127,0,0);  // sunrise starts
+            break;
+        case 7:
+            setLEDs(255, 0, 0);  //sunrise
+            break;
+        case 8:
+            setLEDs(127, 127, 0); // sunrise -> day
+            break;
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+        case 17:
+            setLEDs(0,255,0); // daytime
+            break;
+        case 18:
+            setLEDs(0,127,127); // sunset starts
+            break;
+        case 19:
+            setLEDs(0,0,255); // sunset
+            break;
+        case 20:
+            setLEDs(0,0,127); // sunset ends
+            break;
+        default:
+            setLEDs(0,0,0); // night
     }
+}
+
+void setLEDs(int east_red, int bluewhite, int west_red) {
+
+    analogWrite(EAST_RED_LED, east_red);
+    analogWrite(WEST_RED_LED, west_red);
+    analogWrite(WHITE_LED, bluewhite);
+}
+
+
