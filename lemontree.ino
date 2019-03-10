@@ -8,6 +8,7 @@ const int PUMP_PIN = 2;
 const int WEST_RED_LED = 5; // PWM
 const int EAST_RED_LED = 9; // PWM
 const int WHITE_LED = 6; // PWM
+const int HEAT_PIN = 11;
 
 
 
@@ -21,14 +22,14 @@ String data = "";
 boolean isLive = false;
 
 int moisture = 0;
-double remTemp = 0l; 
-double roomTemp = 0l;
+float remTemp = 0l; 
+float roomTemp = 0l;
 int remLux = 0;       // Sanfransisco light value
 double windSpeed = 0;
 int remSoilMoist = 0;
 int isRaining = 0;
 int fanSpeed=0;
-float localTemp = 0;
+//float localTemp = 0;
 int sfTime = 0; // sanfransisco local time in 24hrs
 int sunsetTime = 0;
 
@@ -62,7 +63,7 @@ void setup() {
               moisture = analogRead(VAL_PROBE);
               //  Serial.print("Sensor:LocalSoilMoisture");Serial.print(moisture);Serial.println("------------------");
               int tempSensor = analogRead(TEMP_PIN);
-              localTemp = readTemp(tempSensor);
+              roomTemp = readTemp(tempSensor);
               //   Serial.print("Sensor:LocalTemprature");Serial.print(tempSensor);Serial.println("------------------");
           
               /// **************** . read all local sensor values before this line 
@@ -118,7 +119,7 @@ void setup() {
 
             //   section  ------------------------------------------------------------- HEAT   START 
             
-                       // code for heat 
+                      startHeating();
             
             //   section  ------------------------------------------------------------- HEAT   END 
 
@@ -138,7 +139,15 @@ void setup() {
 
           } //end loop
 
+    void startHeating(){
 
+      if(roomTemp < remTemp){
+           digitalWrite(HEAT_PIN,HIGH); Serial.println(" Heater ON.... ");
+        }
+       else{
+          digitalWrite(HEAT_PIN,LOW); 
+        } 
+      } 
 
      boolean shouldStartPumpLowMoisture(){
       boolean retStatus = false;
@@ -195,9 +204,9 @@ void readData(){
 
        val = parseValue("<LT>","</LT>"); 
        if(!val.equalsIgnoreCase(NO_VALUE)){
-           roomTemp = val.toDouble();
+           roomTemp = val.toFloat();
        }
-   //    Serial.print("Override:LocalTemprature:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(roomTemp);Serial.println("");
+       Serial.print("Override:LocalTemprature:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(roomTemp);Serial.println("");
  
 
       val = parseValue("<LSM>","</LSM>"); 
@@ -218,9 +227,9 @@ void parseCommonData(){
 
        val = parseValue("<RT>","</RT>");      
       if(!val.equalsIgnoreCase(NO_VALUE)){
-           remTemp = val.toDouble();
+           remTemp = val.toFloat();
       }
-   //   Serial.print("RemoteTemp:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(remTemp);Serial.println("");
+    Serial.print("RemoteTemp:");Serial.print(val);Serial.print("-----CurrentVal:");Serial.print(remTemp);Serial.println("");
 
        val = parseValue("<RL>","</RL>");
        if(!val.equalsIgnoreCase(NO_VALUE)){
@@ -293,7 +302,7 @@ float readTemp(int temp){
   t = (1.0/(c1+c2*logr2+c3*logr2*logr2*logr2));
   t = t - 273.15;
   //t = (t*9.0)/5.0 + 32.0;
-  localTemp = t;
+  roomTemp = t;
   
   }
 
